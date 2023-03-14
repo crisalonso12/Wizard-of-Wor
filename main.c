@@ -1,4 +1,4 @@
-//Using libs SDL, glibc
+//Using libs SDL
 #include <SDL2/SDL.h>	//SDL version 2.0
 
 #include <stdlib.h>
@@ -47,6 +47,15 @@ typedef struct worrior {
 	int muerte;
 } worrior_t;
 
+typedef struct bala {
+
+	float x,y;
+	int w,h;
+	float dx,dy; //vectores
+	int direccion;
+	int din;
+}bala_t;
+
 // Avoid the use of global variables, modify the code to avoid its use.
 int g_width, g_height;		//used if fullscreen
 
@@ -57,6 +66,7 @@ SDL_Renderer *renderer;		//The renderer SDL will use to draw to the screen
 static SDL_Surface *screen;
 static SDL_Surface *title;
 static SDL_Surface *game_menu;
+static SDL_Surface *image;
 static SDL_Surface *tres_vidas;
 static SDL_Surface *siete_vidas;
 static SDL_Surface *radar;
@@ -75,28 +85,23 @@ SDL_Texture *screen_texture;
 
 //variables
 
-int level;
+int nivel;
 int lifes=0;
 
-
-int llamada=0;
 int movimiento_figuras = 0;
-int t = 0;
-int tiempo = 0;
-int tiempo_vel=0;
+int temporizador = 0;
 int vel = 1;
 int v;
-int vel_tiempo = 10;
-int portal=0;
-int enemigo_d = 0;
-int level;
-int gen=0;
+//int portal=0;
+int enemigos=14;
 int cont_tiempo_nuevavida = 0;
 int disparo=0;
 int contador=0;
 
+
 static muro_t muro[152];
 static worrior_t worrior[20];
+static bala_t bala [40];
 
 
 
@@ -152,13 +157,73 @@ static void crear_paredes () { //crea los muros del mapa
 	}
 }
 
+static void imag_radar_O_laberinto(){
+
+	SDL_Rect src;
+	SDL_Rect dest;
+
+
+    switch (nivel){
+            case 0:
+
+                src.x = 0;
+                src.y = 0;
+                src.w = 76;
+                src.h = 20;
+
+                dest.x = 448;
+                dest.y = 484;
+                dest.w = 76;
+                dest.h = 20;
+                SDL_BlitSurface(radar, &src, screen, &dest);
+
+                break;
+
+            case 1:
+
+                src.x = 0;
+                src.y = 0;
+                src.w = 140;
+                src.h = 20;
+
+                dest.x = 415;
+                dest.y = 484;
+                dest.w = 140;
+                dest.h = 20;
+                SDL_BlitSurface(laberinto2, &src, screen, &dest);
+
+
+                break;
+
+            case 2:
+
+                src.x = 0;
+                src.y = 0;
+                src.w = 140;
+                src.h = 20;
+
+                dest.x = 415;
+                dest.y = 484;
+                dest.w = 140;
+                dest.h = 20;
+                SDL_BlitSurface(laberinto3, &src, screen, &dest);
+
+
+                break;
+
+
+	}
+
+
+}
+
+
 static void mapa1(){ //dibuja muros de mapa 1
 
 
-	portal = 0;
-	tiempo=0;
-	tiempo_vel=0;
+	//portal = 0;
 	worrior[0].muerte=1;
+
 
 	//lineas verticales
 	for (int i = 6; i <16 ; ++i)
@@ -174,6 +239,7 @@ static void mapa1(){ //dibuja muros de mapa 1
 	muro[12].x = 596;
 	muro[13].x = 644;
     muro[14].x = 692;
+    muro[15].x = 452;
 
 	for (int i = 16; i < 20; ++i)
 	{
@@ -225,7 +291,7 @@ static void mapa1(){ //dibuja muros de mapa 1
 	muro[89].y = 430;
 	muro[90].y = 430;
 
-	//t=0;
+	temporizador=0;
 }
 
 static void mapa2(){ //dibuja muros de mapa 1
@@ -317,8 +383,94 @@ static void mapa2(){ //dibuja muros de mapa 1
 		j++;
 	}
 
-	//t=0;
+	temporizador=0;
 }
+
+static void mapa3(){ //dibuja muros de mapa 3
+
+	worrior[0].muerte = 1;
+	lifes++;
+	worrior[0].vida = lifes;
+
+	//lineas verticales
+	muro[6].x = 308;
+	muro[6].y = 194;
+	muro[7].y = 194;
+	muro[7].x = 644;
+
+    for (int i = 8; i < 12; i++)
+	{
+		muro[i].y = 242;
+	}
+	muro[8].x = 260;
+	muro[9].x = 356;
+	muro[10].x = 596;
+	muro[11].x = 692;
+
+
+    muro[12].x = 404;
+	muro[12].y = 290;
+	muro[13].y = 290;
+	muro[13].x = 548;
+
+    for (int i = 14; i < 20; i++)
+	{
+		muro[i].y = 338;
+	}
+	muro[14].x = 308;
+	muro[15].x = 356;
+	muro[16].x = 404;
+	muro[17].x = 548;
+	muro[18].x = 596;
+	muro[19].x = 644;
+
+    for (int i = 20; i < 26; i++)
+	{
+		muro[i].y = 386;
+	}
+    muro[20].x = 260;
+	muro[21].x = 308;
+	muro[22].x = 452;
+	muro[23].x = 500;
+    muro[24].x = 644;
+	muro[25].x = 692;
+
+    muro[26].x = 356;
+	muro[26].y = 434;
+	muro[27].y = 434;
+	muro[27].x = 596;
+
+
+	//lineas horizontal
+    int	j = 0;
+
+	muro[85].x = 360;
+	muro[89].x = 552;
+	muro[85].y = 238;
+	muro[89].y = 238;
+
+	for (int i = 86; i < 89; ++i)
+	{
+		muro[i].x = 456;
+		muro[i].y = 238+j*48;
+		j++;
+	}
+    j=0;
+	muro[90].x = 312;
+	muro[91].x = 600;
+	muro[90].y = 286;
+	muro[91].y = 286;
+
+
+    muro[92].x = 408;
+	muro[93].x = 504;
+	muro[92].y = 430;
+	muro[93].y = 430;
+
+
+	temporizador=0;
+}
+
 
 static void dibuja_cuadro() {
 
@@ -436,13 +588,13 @@ static void muro_salida_worrior(int a){ //muro que aparece y desaparece
 	}
 }
 
-//Inicializacion de la posicion y tamaño de los elementos
+
 static void game_inicialization() {
 
     dibuja_cuadro();
 
-	worrior[0].x = 700;
-	worrior[0].y = 490;
+	worrior[0].x = 500;
+	worrior[0].y = 500;
 	worrior[0].w = 36;
 	worrior[0].h = 36;
 	worrior[0].vida = lifes;
@@ -452,8 +604,8 @@ static void game_inicialization() {
 	worrior[1].y = 488;
 	worrior[1].w = 36;
 	worrior[1].h = 36;
-	//bullet[0].x = 5500;
-	//bullet[0].y = 5500;
+	bala[0].x = 5000;
+	bala[0].y = 5000;
 
 	for (int i = 2; i <= worrior[0].vida; i++)
 	{
@@ -472,37 +624,6 @@ static void game_inicialization() {
 		}
 	}
 
-
-/*
-	for (int i = 0; i < 6; ++i)
-	{
-		enemigo[i].color = 0;
-		enemigo[i].velocidad = 0;
-	}
-	enemigo[6].color = 1;
-	enemigo[6].velocidad = 2;
-	enemigo[7].color = 2;
-	enemigo[7].velocidad = 2;
-	enemigo[8].color = 1;
-	enemigo[8].velocidad = 2;
-	enemigo[9].color = 2;
-	enemigo[9].velocidad = 2;
-	enemigo[10].color = 1;
-	enemigo[10].velocidad = 2;
-	enemigo[11].color = 2;
-	enemigo[11].velocidad = 2;
-	enemigo[12].color = 3;
-	enemigo[12].velocidad = 5;
-	enemigo[13].color = 4;
-	enemigo[13].velocidad = 5;
-
-	for (int j = 0; j < enemigos_tot; j++)
-	{
-		enemigo[j].x=6000;
-		enemigo[j].y=6000;
-		enemigo_radar[j].x = 6000;
-		enemigo_radar[j].y = 6000;
-	}*/
 }
 
 
@@ -647,7 +768,7 @@ static void cambios_fig_worrior () {//dibuja al tirador caminando o disparando
 				dest.w=36;
 				dest.h=36;
 				SDL_BlitSurface(sprites, &dest, screen, &src);
-				if((contador/7)<10)////////////////////////////////////////////////////////
+				if((contador/7)<10)
 				{
 					contador++;
 				}
@@ -686,7 +807,7 @@ static void movilizacion_worrior(int direction) { //Función encargada del movim
 	y = worrior[0].y;
 
 	if (worrior[0].vida>0 && worrior[0].muerte==0){
-	if(t%3==2){
+	if(temporizador%3==2){
 
 	switch(direction){
 // flecha arriba
@@ -913,12 +1034,12 @@ static void movilizacion_worrior(int direction) { //Función encargada del movim
             if (i==71){
                 worrior[0].x = 702;
                 worrior[0].y = 296;
-                portal=1;
+                //portal=1;
             }
             else{
                 worrior[0].x = 222;
                 worrior[0].y = 296;
-                portal=1;
+                //portal=1;
 
             }
             }
@@ -930,17 +1051,7 @@ static void movilizacion_worrior(int direction) { //Función encargada del movim
             }
         }
 	}
-	/*for (int i = 0; i < enemigos_tot; ++i)
-	{
-	if (verif_colision_tiradorenemigo(enemigo[i] , worrior[0]) == 1)
-	{
-	if (enemigo[i].alive == 1)
-	{
-		worrior[0].muerte = 1;
-		cant_num_sprite_tir = 0;
-	}
-	}
-	}*/
+
 	}
  }
 }
@@ -1016,8 +1127,49 @@ static void movilizacion_worrior(int direction) { //Función encargada del movim
 	}
 }
 
-//Retorna 1 si ocurre la colision y 0 si no ocurre
+
 int comprobacion_colision_w_m(worrior_t a, muro_t b) {
+
+	int izq_a;
+    int izq_b;
+	int der_a;
+	int der_b;
+	int arriba_a;
+	int arriba_b;
+	int abajo_a;
+    int abajo_b;
+
+
+	izq_a = a.x;
+	der_a = a.x + a.w;
+	arriba_a = a.y;
+	abajo_a = a.y + a.h;
+
+	izq_b = b.x;
+	der_b = b.x + b.w;
+	arriba_b = b.y;
+	abajo_b = b.y + b.h;
+
+
+	if (izq_a > der_b) {
+		return FALSE;//no ocurre
+	}
+
+	if (der_a < izq_b) {
+		return FALSE;
+	}
+
+	if (arriba_a > abajo_b) {
+		return FALSE;
+	}
+
+	if (abajo_a < arriba_b) {
+		return FALSE;
+	}
+
+	return TRUE;//ocurre
+	}
+int comprobacion_colision_b_m(bala_t a, muro_t b) {
 
 	int izq_a;
     int izq_b;
@@ -1060,16 +1212,126 @@ int comprobacion_colision_w_m(worrior_t a, muro_t b) {
 	}
 
 
-// Main function
+static void establece_bala() { //dibujar las balas
 
+	SDL_Rect src;
+
+
+	for (int i = 0; i < 40; i++){
+
+		src.x = bala[i].x;
+		src.y = bala[i].y;
+		src.w = bala[i].w;
+		src.h = bala[i].h;
+		bala[i].dx=0;
+		bala[i].dy=0;
+
+		int p = SDL_FillRect(screen, &src, 0xffffffff);
+
+		if (p !=0){
+
+		printf("Error al dibujar la bala");
+		}
+	}
+}
+
+static void crea_bala (int entrada){//crea las balas de acuerdo con la dirreccion
+
+	if (entrada==1){
+
+			if (worrior[0].muerte==0){
+
+				bala[0].direccion=worrior[0].direccion;
+
+
+				if (bala[0].direccion == 0){//arriba
+					bala[0].x = worrior[0].x + 12;
+					bala[0].y = worrior[0].y;
+					bala[0].h = 10;
+					bala[0].w = 4;
+				}
+                if (bala[0].direccion == 1){//der
+                    bala[0].x = worrior[0].x;
+                    bala[0].y = worrior[0].y + 12;
+                    bala[0].h=4;
+                    bala[0].w=10;
+                }
+				if (bala[0].direccion == 2){//abajo
+					bala[0].x = worrior[0].x + 12;
+					bala[0].y = worrior[0].y;
+					bala[0].h = 10;
+					bala[0].w = 4;
+				}
+				if (bala[0].direccion == 3){//izq
+					bala[0].x = worrior[0].x;
+					bala[0].y = worrior[0].y + 12;
+					bala[0].h=4;
+					bala[0].w=10;
+				}
+
+		}
+	}
+
+}
+
+static void movimiento_bala(){
+
+	for (int i=0; i <=enemigos; i++)
+	{
+		int dire;
+		dire = bala[i].direccion;
+
+
+        if (dire == 0){ //arriba
+			bala[i].y = bala[i].y - 8;
+		}
+
+        if (dire == 1){ //derecha
+			bala[i].x = bala[i].x + 8;
+		}
+        if (dire == 2){ //abajo
+			bala[i].y = bala[i].y + 8;
+		}
+		if (dire == 3){ //izquierda
+			bala[i].x = bala[i].x - 8;
+		}
+	}
+
+	for (int i = 0; i < 150; i++)
+	{
+		for (int j=0; j<=enemigos; j++)
+		{
+				if (comprobacion_colision_b_m(bala[j],muro[i])){
+					bala[j].x = 5000;
+					bala[j].y = 5000;
+				}
+		}
+	}
+}
+
+static void image_get_ready() {
+
+    SDL_Rect src;
+	SDL_Rect dest;
+
+
+                src.x = 0;
+                src.y = 320;
+                src.w = 480;
+                src.h = 90;
+
+                dest.x = 240;
+                dest.y = 290;
+                dest.w = 480;
+                dest.h = 90;
+                SDL_BlitSurface(sprites, &src, screen, &dest);
+
+}
+
+// Main function
 int main (int argc, char *args[]) {
 
-	// Define the player and the maps
-	//game_element_t player;
 
-	// For the project the elements of the map should be created
-	// dinamically (using malloc) and using linked lists.
-	//game_element_t map_element;
 
 	//SDL Window setup
 	if (init_SDL(SCREEN_WIDTH, SCREEN_HEIGHT, argc, args) == FAILURE) {
@@ -1091,8 +1353,8 @@ int main (int argc, char *args[]) {
 
 	//render loop
 	while(quit == FALSE) {
-        t++;
-        tiempo_vel++;
+        temporizador++;
+
         //check for new events every frame
 		SDL_PumpEvents();
 
@@ -1102,12 +1364,6 @@ int main (int argc, char *args[]) {
 
             quit = TRUE;
         }
-
-        if (keystate[SDL_SCANCODE_SPACE]) {
-
-        }
-
-
 
         //Acciones de movimientos con flechas
         if (keystate[SDL_SCANCODE_DOWN]) {
@@ -1128,6 +1384,34 @@ int main (int argc, char *args[]) {
 		}
 
 
+        if (keystate[SDL_SCANCODE_SPACE]) {
+            if (bala[0].x == 5000 || bala[0].y == 5000){
+
+				if (worrior[0].direccion == 0){
+					disparo=1;
+					crea_bala(1);
+					//movimiento_bala();
+
+				}
+				if (worrior[0].direccion == 1){
+					disparo=1;
+					crea_bala(1);
+					//movimiento_bala();
+				}
+				if (worrior[0].direccion == 2){
+					disparo=1;
+					crea_bala(1);
+					//movimiento_bala();
+				}
+				if (worrior[0].direccion == 3){
+					disparo=1;
+					crea_bala(1);
+					//movimiento_bala();
+				}
+				SDL_Delay(100);
+			}
+        }
+
 		//Dibuja el fondo
 		SDL_RenderClear(renderer);
 
@@ -1146,18 +1430,51 @@ int main (int argc, char *args[]) {
 
                 if (select==3)
 				{
-					if (keystate[SDL_SCANCODE_RETURN]) {
+					/*if (keystate[SDL_SCANCODE_RETURN]) {
 
 						lifes = 3;
                         accion = 1;
-						level=0;
+						nivel=0;
 						game_inicialization();
 						mapa1();
-						//enemigo_azul();
+						//mapa3();
+
 						SDL_Delay(300);
 
-					}
+					}*/
+                    if (keystate[SDL_SCANCODE_A]) {
+                            lifes = 3;
+                            accion = 1;
+                            nivel=0;
+                            game_inicialization();
+                            mapa1();
+                            SDL_Delay(300);
 
+                    }
+                    else if (keystate[SDL_SCANCODE_S]) {
+                            lifes = 3;
+                            accion = 1;
+                            nivel=1;
+                            game_inicialization();
+                            //portal = 0;
+                            //tiempo=0;
+                            //tiempo_vel=0;
+                            mapa2();
+                            SDL_Delay(300);
+
+                    }
+                    else if (keystate[SDL_SCANCODE_D]) {
+                            lifes = 3;
+                            accion = 1;
+                            nivel=2;
+                            game_inicialization();
+                            //portal = 0;
+                            //tiempo=0;
+                            //tiempo_vel=0;
+                            mapa3();
+                            SDL_Delay(300);
+
+                    }
 				}
 				if (select==4)
 				{
@@ -1165,11 +1482,13 @@ int main (int argc, char *args[]) {
 
 						lifes = 7;
 						accion = 1;
-						level=0;
+						nivel=0;
 						game_inicialization();
 						mapa1();
+						//mapa3();
+						//mapa2();
 
-						//enemigo_azul();
+
 						SDL_Delay(300);
 					}
 					else if (keystate[SDL_SCANCODE_P]) {
@@ -1185,6 +1504,7 @@ int main (int argc, char *args[]) {
 		}
 
 		else if(accion==1){
+
             cuadro_de_juego();
 
             mov_worrior_nuevavida(0);
@@ -1192,10 +1512,15 @@ int main (int argc, char *args[]) {
             crear_paredes();
             cambios_fig_worrior();
             crea_worrior();
+            //crea_bala(1);
+            movimiento_bala();
+            establece_bala();
+            imag_radar_O_laberinto();
 
             if (keystate[SDL_SCANCODE_M]) {
                 accion=2;
             }
+            //}
 
 		}
 		else if(accion==2){
